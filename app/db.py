@@ -62,8 +62,14 @@ def init_db():
         CREATE TABLE IF NOT EXISTS activity (
             id INTEGER PRIMARY KEY, kind TEXT NOT NULL, message TEXT NOT NULL, created_at TEXT NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS translation_jobs (
+            doc_id TEXT PRIMARY KEY REFERENCES documents(id) ON DELETE CASCADE,
+            status TEXT NOT NULL, completed INTEGER DEFAULT 0, total INTEGER DEFAULT 0,
+            error TEXT DEFAULT '', updated_at TEXT NOT NULL
+        );
         ''')
         db.execute("UPDATE documents SET status='interrupted',error='上次解析被中断，请重试解析' WHERE status IN ('parsing','indexing')")
+        db.execute("UPDATE translation_jobs SET status='interrupted',error='服务重启，已完成译文仍保留，可继续' WHERE status IN ('running','queued')")
 
 
 def record(kind, message):

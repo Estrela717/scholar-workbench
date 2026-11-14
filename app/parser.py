@@ -211,17 +211,30 @@ def _parse_document(doc_id):
 def extract_references(doc_id):
     with connect() as db:
         rows=db.execute("SELECT * FROM chunks WHERE doc_id=? AND kind='reference' ORDER BY ordinal",(doc_id,)).fetchall()
-        number=0
-        for row in rows:
-            parts=re.split(r'(?=\[\d{1,3}\]\s)',row['text'])
-            for part in parts:
-                if len(part.strip())<25:
-                    continue
-                number+=1
-                match=re.match(r'\[(\d+)\]',part.strip())
-                label=match.group(1) if match else str(number)
-                db.execute('INSERT INTO paper_references(doc_id,label,text,page,chunk_id) VALUES(?,?,?,?,?)',
-                           (doc_id,label,part.strip(),row['page'],row['id']))
+        numbered=any(re.match(r'^\[\d{1,3}\]',row['text'].strip()) for row in rows)
+        entries=[]
+        if numbered:
+            current=None
+            for row in rows:
+                for part in re.split(r'(?=\[\d{1,3}\]\s)',row['text']):
+                    part=part.strip()
+                    if len(part)<4:
+                        continue
+                    match=re.match(r'^\[(\d+)\]',part)
+                    if match:
+                        if current:
+                            entries.append(current)
+                        current={'label':match.group(1),'text':part,'page':row['page'],'chunk_id':row['id']}
+                    elif current:
+                        current['text']+='\n'+part
+            if current:
+                entries.append(current)
+        else:
+            entries=[{'label':str(i+1),'text':row['text'],'page':row['page'],'chunk_id':row['id']}
+                     for i,row in enumerate(rows) if len(row['text'])>=25]
+        for entry in entries:
+            db.execute('INSERT INTO paper_references(doc_id,label,text,page,chunk_id) VALUES(?,?,?,?,?)',
+                       (doc_id,entry['label'],entry['text'],entry['page'],entry['chunk_id']))
 
 
 def link_references():
@@ -275,14 +288,26 @@ def duplicates(doc_id):
         docs=db.execute("SELECT id,title,arxiv_id FROM documents WHERE id!=? AND status='ready'",(doc_id,)).fetchall()
         own=' '.join(r['text'] for r in db.execute('SELECT text FROM chunks WHERE doc_id=? ORDER BY ordinal LIMIT 100',(doc_id,)))
         own_tokens=set(tokens(own))
+        def centroid(identifier):
+            values=[np.frombuffer(r['embedding'],dtype=np.float32) for r in db.execute(
+                'SELECT embedding FROM chunks WHERE doc_id=? AND embedding IS NOT NULL AND embedding_model=? ORDER BY ordinal LIMIT 80',
+                (identifier,EMBED_MODEL))]
+            if not values or len({v.size for v in values})!=1:
+                return None
+            mean=np.mean(values,axis=0)
+            return mean/max(np.linalg.norm(mean),1e-8)
+        own_vector=centroid(doc_id)
         matches=[]
         for other in docs:
             text=' '.join(r['text'] for r in db.execute('SELECT text FROM chunks WHERE doc_id=? ORDER BY ordinal LIMIT 100',(other['id'],)))
             other_tokens=set(tokens(text))
             similarity=len(own_tokens&other_tokens)/max(len(own_tokens|other_tokens),1)
+            other_vector=centroid(other['id']) if own_vector is not None else None
+            semantic=float(own_vector @ other_vector) if other_vector is not None and own_vector.size==other_vector.size else None
             same_arxiv=bool(item['arxiv_id']) and re.sub(r'v\d+$','',item['arxiv_id'])==re.sub(r'v\d+$','',other['arxiv_id'])
-            if same_arxiv or similarity>0.7:
+            if same_arxiv or similarity>0.7 or (semantic is not None and semantic>.95 and similarity>.35):
                 matches.append({'id':other['id'],'title':other['title'],'score':round(similarity,3),
-                                'reason':'同一 arXiv 论文的版本' if same_arxiv else '正文词项高度重合',
+                                'semantic_score':round(semantic,3) if semantic is not None else None,
+                                'reason':'同一 arXiv 论文的版本' if same_arxiv else ('语义与正文内容高度相似' if semantic is not None and semantic>.95 else '正文词项高度重合'),
                                 'arxiv_id':other['arxiv_id']})
     return matches

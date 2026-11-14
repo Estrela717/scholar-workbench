@@ -14,6 +14,7 @@ from .config import ROOT,FILES
 from .db import connect,init_db,document,decode_document,now,record
 from .parser import parse_document,index_document,duplicates,link_references
 from . import llm,research
+from .jobs import translate_document
 
 init_db()
 app=FastAPI(title='知研 · Scholar Workbench',version='0.1.0')
@@ -174,9 +175,112 @@ def page_image(doc_id:str,page:int):
     return Response(content,media_type='image/png',headers={'Cache-Control':'private,max-age=3600'})
 
 
+@app.get('/api/documents/{doc_id}/pages/{page}/structures')
+def page_structures(doc_id:str,page:int):
+    item=require_document(doc_id)
+    if not 1<=page<=item['page_count']:
+        raise HTTPException(404,'页码不存在')
+    tables=[]
+    warnings=[]
+    with fitz.open(FILES/f'{doc_id}.pdf') as pdf:
+        current=pdf[page-1]
+        try:
+            detected=current.find_tables()
+            for table in detected.tables[:12]:
+                tables.append({'bbox':list(table.bbox),'rows':table.extract(),'row_count':table.row_count,'col_count':table.col_count})
+        except Exception:
+            warnings.append('这一页的表格未能自动结构化，请核对原始页面')
+        figures=[{'bbox':list(image['bbox'])} for image in current.get_image_info()]
+    with connect() as db:
+        rows=db.execute('SELECT id,text,bbox FROM chunks WHERE doc_id=? AND page=?',(doc_id,page)).fetchall()
+    formula_candidates=[{'id':r['id'],'text':r['text'],'bbox':json.loads(r['bbox'])} for r in rows
+                        if len(r['text'])<700 and re.search(r'[∑∏∫√∂∇]|\b(?:softmax|Attention)\s*\(|[=≈≤≥].*[+−×/]',r['text'])]
+    return {'tables':tables,'figures':figures,'formula_candidates':formula_candidates,'warnings':warnings,
+            'note':'表格是自动识别结果；公式候选保留原文字符与位置，并非已验证的 LaTeX 转写。'}
+
+
+class ResolveDuplicate(BaseModel):
+    other_id:str
+    action:str
+
+
+@app.post('/api/documents/{doc_id}/resolve-duplicate')
+def resolve_duplicate(doc_id:str,request:ResolveDuplicate):
+    item=require_document(doc_id)
+    other=require_document(request.other_id)
+    if item['status']!='ready' or other['status']!='ready':
+        raise HTTPException(409,'请等待两个版本都完成处理')
+    if request.other_id not in [x['id'] for x in duplicates(doc_id)]:
+        raise HTTPException(400,'这两篇文献没有被识别为重复版本')
+    if request.action=='replace':
+        with connect() as db:
+            db.execute('DELETE FROM documents WHERE id=?',(request.other_id,))
+        (FILES/f'{request.other_id}.pdf').unlink(missing_ok=True)
+        link_references()
+        record('version',f'用户选择保留 {item["title"]}，移除另一版本')
+    elif request.action=='keep':
+        with connect() as db:
+            meta=item['metadata']
+            kept=meta.setdefault('kept_versions',[])
+            if request.other_id not in kept:
+                kept.append(request.other_id)
+            db.execute('UPDATE documents SET metadata=? WHERE id=?',(json.dumps(meta,ensure_ascii=False),doc_id))
+    else:
+        raise HTTPException(400,'未知操作')
+    return {'ok':True}
+
+
 class TranslationRequest(BaseModel):
     chunk_id:int|None=None
     text:str=Field(default='',max_length=10000)
+
+
+@app.get('/api/documents/{doc_id}/translation')
+def translation_job(doc_id:str):
+    require_document(doc_id)
+    with connect() as db:
+        row=db.execute('SELECT * FROM translation_jobs WHERE doc_id=?',(doc_id,)).fetchone()
+    return dict(row) if row else {'status':'none','completed':0,'total':0}
+
+
+@app.post('/api/documents/{doc_id}/translation')
+def start_translation(doc_id:str,background_tasks:BackgroundTasks):
+    item=require_document(doc_id)
+    if item['status']!='ready':
+        raise HTTPException(409,'请等待文献处理完成')
+    with connect() as db:
+        row=db.execute('SELECT status FROM translation_jobs WHERE doc_id=?',(doc_id,)).fetchone()
+        if row and row['status'] in ('running','queued'):
+            return {'status':row['status']}
+        db.execute("INSERT OR REPLACE INTO translation_jobs(doc_id,status,total,updated_at) VALUES(?,'queued',?,?)",(doc_id,item['chunk_count'],now()))
+    background_tasks.add_task(translate_document,doc_id)
+    return {'status':'queued'}
+
+
+@app.post('/api/documents/{doc_id}/translation/cancel')
+def cancel_translation(doc_id:str):
+    require_document(doc_id)
+    with connect() as db:
+        db.execute("UPDATE translation_jobs SET status='cancelled',updated_at=? WHERE doc_id=? AND status IN ('queued','running')",(now(),doc_id))
+    return {'ok':True}
+
+
+@app.get('/api/export/bibtex')
+def export_bibtex():
+    with connect() as db:
+        papers=db.execute("SELECT * FROM documents WHERE status='ready'").fetchall()
+    def escape(value):
+        return str(value).replace('\\','').replace('{','').replace('}','').replace('&',r'\&').replace('%',r'\%')
+    output=[]
+    for paper in papers:
+        key='paper'+(re.sub(r'[^a-zA-Z0-9]','',paper['arxiv_id']) or paper['id'][:8])
+        fields={'title':paper['title'],'author':paper['authors'].replace(', ',' and '),'year':paper['year']}
+        if paper['arxiv_id']:
+            fields.update(eprint=paper['arxiv_id'],archivePrefix='arXiv',url='https://arxiv.org/abs/'+paper['arxiv_id'])
+        if paper['doi']:
+            fields['doi']=paper['doi']
+        output.append('@misc{'+key+',\n'+',\n'.join('  '+k+' = {'+escape(v)+'}' for k,v in fields.items() if v)+'\n}')
+    return Response('\n\n'.join(output),media_type='text/plain;charset=utf-8',headers={'Content-Disposition':'attachment; filename="library.bib"'})
 
 
 @app.post('/api/translate')

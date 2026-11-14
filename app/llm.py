@@ -44,14 +44,22 @@ def generate(system, prompt, max_tokens=1600, json_mode=False):
                 response.raise_for_status()
                 text = response.json()['choices'][0]['message']['content']
             else:
+                # Ollama's Qwen3 template needs thinking enabled to separate its
+                # reasoning from the final content field. Disabling it on the
+                # installed model emitted untagged reasoning as the answer.
+                thinking = MODEL.lower().startswith('qwen3')
                 payload = {'model': MODEL, 'messages':[{'role':'system','content':system},
-                           {'role':'user','content':prompt}], 'stream':False, 'think':False,
-                           'options':{'temperature':0.15, 'num_ctx':8192, 'num_predict':max_tokens}, 'keep_alive':'5m'}
+                           {'role':'user','content':prompt}], 'stream':False, 'think':thinking,
+                           'options':{'temperature':0.15, 'num_ctx':8192,
+                                      'num_predict':max(4096,max_tokens+2048) if thinking else max_tokens}, 'keep_alive':'5m'}
                 if json_mode:
                     payload['format'] = 'json'
                 response = httpx.post(f'{OLLAMA}/api/chat', json=payload, timeout=300)
                 response.raise_for_status()
-                text = response.json()['message']['content']
+                result = response.json()
+                text = result['message']['content']
+                if result.get('done_reason') == 'length':
+                    raise ModelUnavailable('模型输出达到长度上限，未将不完整回答作为结果。请缩短问题或选择更少文献后重试。')
         text = clean_content(text)
         if not text:
             raise ModelUnavailable('模型未返回可用正文，请减少输入长度后重试。')
@@ -104,6 +112,7 @@ def plan_tools(query, allow_external=False):
             calls=response.json()['choices'][0]['message'].get('tool_calls',[])
             return [{'name':c['function']['name'],'arguments':json.loads(c['function']['arguments'])} for c in calls]
         response=httpx.post(OLLAMA+'/api/chat',json={'model':MODEL,'messages':messages,'tools':tools,
-                            'stream':False,'think':False,'options':{'temperature':0,'num_ctx':4096,'num_predict':400}},timeout=90)
+                            'stream':False,'think':MODEL.lower().startswith('qwen3'),
+                            'options':{'temperature':0,'num_ctx':4096,'num_predict':2200}},timeout=120)
         response.raise_for_status()
         return [c['function'] for c in response.json()['message'].get('tool_calls',[])]

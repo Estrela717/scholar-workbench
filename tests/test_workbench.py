@@ -140,3 +140,55 @@ def test_delete_cascades_chunks():
     assert client.get('/api/documents/'+doc_id).status_code==404
     with connect() as db:
         assert db.execute('SELECT COUNT(*) FROM chunks WHERE doc_id=?',(doc_id,)).fetchone()[0]==0
+
+
+def test_cancelled_translation_is_not_restarted(monkeypatch, uploaded):
+    from app.jobs import translate_document
+    with connect() as db:
+        db.execute("INSERT OR REPLACE INTO translation_jobs(doc_id,status,total,updated_at) VALUES(?,'cancelled',2,'test')",(uploaded,))
+    monkeypatch.setattr(llm,'generate',lambda *a,**k:pytest.fail('Cancelled job called model'))
+    translate_document(uploaded)
+    assert client.get(f'/api/documents/{uploaded}/translation').json()['status']=='cancelled'
+
+
+def test_translation_resume_uses_cached_chunks(monkeypatch, uploaded):
+    with connect() as db:
+        ids=[row['id'] for row in db.execute('SELECT id FROM chunks WHERE doc_id=? ORDER BY ordinal',(uploaded,))]
+        db.execute('INSERT OR REPLACE INTO translations(chunk_id,text,model,created_at) VALUES(?,?,?,?)',(ids[0],'cached text','test','test'))
+    calls=[]
+    def generate(*a,**k):
+        calls.append(a)
+        return 'translated test text'
+    monkeypatch.setattr(llm,'generate',generate)
+    assert client.post(f'/api/documents/{uploaded}/translation').status_code==200
+    job=client.get(f'/api/documents/{uploaded}/translation').json()
+    assert job['status']=='done' and job['completed']==len(ids)
+    assert len(calls)==len(ids)-1
+    with connect() as db:
+        assert db.execute('SELECT text FROM translations WHERE chunk_id=?',(ids[0],)).fetchone()['text']=='cached text'
+
+
+def test_structure_extraction_and_bibtex_are_real(uploaded):
+    response=client.get(f'/api/documents/{uploaded}/pages/1/structures')
+    assert response.status_code==200 and isinstance(response.json()['tables'],list)
+    bib=client.get('/api/export/bibtex')
+    assert bib.status_code==200 and 'Evidence Study' in bib.text and '1706.03762v1' in bib.text
+
+
+def test_qwen_reasoning_is_separate_and_truncation_is_rejected(monkeypatch):
+    captured=[]
+    monkeypatch.setattr(llm,'MODEL','qwen3:4b')
+    monkeypatch.setattr(llm,'API_BASE','')
+    class Response:
+        def raise_for_status(self):pass
+        def json(self):
+            return {'message':{'content':'Final answer','thinking':'private reasoning'},'done_reason':'stop'}
+    def post(*a,**k):
+        captured.append(k['json'])
+        return Response()
+    monkeypatch.setattr(llm.httpx,'post',post)
+    assert llm.generate('system','prompt')=='Final answer'
+    assert captured[0]['think'] is True and captured[0]['options']['num_predict']>=4096
+    monkeypatch.setattr(Response,'json',lambda self:{'message':{'content':'Partial'},'done_reason':'length'})
+    with pytest.raises(llm.ModelUnavailable,match='长度上限'):
+        llm.generate('system','prompt')
