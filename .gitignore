@@ -1,0 +1,12 @@
+.venv/
+.cache/
+data/
+node_modules/
+dist/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+runtime/
+artifacts/screenshots/
+*.log
