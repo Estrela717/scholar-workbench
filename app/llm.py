@@ -65,7 +65,7 @@ def embeddings(texts):
         return np.empty((0, 0), dtype=np.float32)
     with MODEL_LOCK:
         response = httpx.post(f'{OLLAMA}/api/embed', json={'model':EMBED_MODEL, 'input':texts,
-                              'truncate':True, 'keep_alive':'0'}, timeout=180)
+                              'truncate':True, 'keep_alive':'5m'}, timeout=180)
         response.raise_for_status()
     values = np.asarray(response.json()['embeddings'], dtype=np.float32)
     norms = np.linalg.norm(values, axis=1, keepdims=True)
@@ -75,3 +75,35 @@ def embeddings(texts):
 def json_object(text):
     text = re.sub(r'^```(?:json)?\s*|\s*```$', '', text.strip())
     return json.loads(text)
+
+
+def plan_tools(query, allow_external=False):
+    """Ask the model to choose read-only tools using native function calling.
+
+    Arguments are validated again by the dispatcher. No generated code is executed.
+    """
+    tools=[{'type':'function','function':{'name':'search_library',
+        'description':'Search the local paper library for original evidence. Always call this for paper questions.',
+        'parameters':{'type':'object','properties':{'query':{'type':'string'}},'required':['query']}}},
+        {'type':'function','function':{'name':'citation_graph',
+        'description':'Read the verified local citation graph when asked about relationships or influential papers.',
+        'parameters':{'type':'object','properties':{}}}}]
+    if allow_external:
+        tools.append({'type':'function','function':{'name':'search_arxiv',
+                      'description':'Search public arXiv metadata. Use a concise English research topic.',
+                      'parameters':{'type':'object','properties':{'query':{'type':'string'}},'required':['query']}}})
+    messages=[{'role':'system','content':'You plan a research task by selecting tools. Call search_library first. '
+               'Optionally call citation_graph for citation relationships. Never invent tool results. Keep search terms concise.'},
+              {'role':'user','content':query}]
+    with MODEL_LOCK:
+        if API_BASE:
+            headers={'Authorization':f'Bearer {API_KEY}'} if API_KEY else {}
+            response=httpx.post(API_BASE+'/chat/completions',headers=headers,
+                                json={'model':MODEL,'messages':messages,'tools':tools,'max_tokens':400,'temperature':0},timeout=90)
+            response.raise_for_status()
+            calls=response.json()['choices'][0]['message'].get('tool_calls',[])
+            return [{'name':c['function']['name'],'arguments':json.loads(c['function']['arguments'])} for c in calls]
+        response=httpx.post(OLLAMA+'/api/chat',json={'model':MODEL,'messages':messages,'tools':tools,
+                            'stream':False,'think':False,'options':{'temperature':0,'num_ctx':4096,'num_predict':400}},timeout=90)
+        response.raise_for_status()
+        return [c['function'] for c in response.json()['message'].get('tool_calls',[])]

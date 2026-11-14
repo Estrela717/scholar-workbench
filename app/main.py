@@ -4,7 +4,7 @@ import json
 import re
 import uuid
 from pathlib import Path
-import fitz
+import pymupdf as fitz
 import httpx
 from fastapi import FastAPI, File, UploadFile, HTTPException, BackgroundTasks, Request
 from fastapi.responses import FileResponse, Response, JSONResponse
@@ -124,6 +124,10 @@ def index(doc_id:str,background_tasks:BackgroundTasks):
     item=require_document(doc_id)
     if item['status']!='ready':
         raise HTTPException(409,'请等待解析完成')
+    with connect() as db:
+        changed=db.execute("UPDATE documents SET status='indexing',progress=0 WHERE id=? AND status='ready'",(doc_id,)).rowcount
+        if not changed:
+            raise HTTPException(409,'索引任务已经运行')
     background_tasks.add_task(index_document,doc_id)
     return {'queued':True}
 
@@ -200,6 +204,7 @@ def translate(request:TranslationRequest):
 class Question(BaseModel):
     query:str=Field(min_length=1,max_length=2000)
     doc_ids:list[str]=Field(default_factory=list,max_length=30)
+    agent:bool=False
 
 
 @app.post('/api/search')
@@ -210,7 +215,7 @@ def search(request:Question):
 
 @app.post('/api/ask')
 def ask(request:Question):
-    return research.answer(request.query,request.doc_ids)
+    return research.answer(request.query,request.doc_ids,request.agent)
 
 
 @app.get('/api/graph')

@@ -2,9 +2,10 @@ import hashlib
 import json
 import re
 import threading
+import unicodedata
 from collections import Counter
 from pathlib import Path
-import fitz
+import pymupdf as fitz
 import numpy as np
 from .config import FILES, EMBED_MODEL
 from .db import connect, document, record
@@ -50,7 +51,8 @@ def page_blocks(page):
         for line in block['lines']:
             lines.append(''.join(span['text'] for span in line['spans']))
             sizes.extend(span['size'] for span in line['spans'] if span['text'].strip())
-        text = '\n'.join(lines).strip()
+        text = unicodedata.normalize('NFKC','\n'.join(lines).strip())
+        text = re.sub(r'(?<=\w)-\n(?=\w)', '', text)
         if text:
             blocks.append({'text':text,'bbox':list(block['bbox']),'kind':'paragraph',
                            'size':max(sizes) if sizes else 10})
@@ -165,20 +167,39 @@ def _parse_document(doc_id):
         update_document(doc_id,progress=round((page_index+1)/max(count,1)*90),chunk_count=ordinal)
     metadata = pdf.metadata or {}
     pdf.close()
-    title_candidates = [b for b in first_blocks if len(' '.join(b['text'].split()))>12 and b['bbox'][1]<350]
-    inferred_title = max(title_candidates,key=lambda b:b['size'])['text'] if title_candidates else item['filename']
+    title_candidates = [b for b in first_blocks if len(' '.join(b['text'].split()))>12
+                        and b['bbox'][1]<350 and b['bbox'][2]-b['bbox'][0]>80
+                        and not re.match(r'^arxiv\s*:',b['text'],re.I)]
+    largest=max((b['size'] for b in title_candidates),default=10)
+    title_parts=sorted([b for b in title_candidates if b['size']>=largest-.4],key=lambda b:b['bbox'][1])
+    inferred_title=' '.join(b['text'] for b in title_parts if b['bbox'][1]<title_parts[0]['bbox'][1]+90) if title_parts else item['filename']
     title = metadata.get('title','').strip()
     if len(title)<10 or title.lower().endswith('.pdf'):
         title=' '.join(inferred_title.split())[:300]
     authors=metadata.get('author','')[:500]
+    if not authors and title_parts:
+        title_bottom=max(b['bbox'][3] for b in title_parts)
+        abstract_y=min((b['bbox'][1] for b in first_blocks if b['text'].strip().lower()=='abstract'),default=350)
+        names=[]
+        for block in sorted(first_blocks,key=lambda b:(b['bbox'][1],b['bbox'][0])):
+            if block['bbox'][1]<title_bottom or block['bbox'][1]>=abstract_y:
+                continue
+            for line in block['text'].splitlines():
+                if re.search(r'@|arxiv|google|university|research|institute|laboratory|facebook|^\{|^\d',line,re.I):
+                    continue
+                clean=re.sub(r'[†‡∗⋆*0-9]+','',line).strip(' ,; ')
+                if 5<len(clean)<200 and len(clean.split())>=2:
+                    names.append(clean)
+        authors=', '.join(names)[:500]
     arxiv_match=re.search(r'(?:arXiv[:\s]*)?(\d{4}\.\d{4,5})(v\d+)?',first_text+' '+item['filename'])
     arxiv_id=''.join(x or '' for x in arxiv_match.groups()) if arxiv_match else ''
     doi_match=re.search(r'10\.\d{4,9}/[^\s<>]+',first_text)
     abstract_match=re.search(r'\bAbstract\b\s*[:—-]?\s*(.{60,3000}?)(?:\n\s*1\s|\nIntroduction|\nKeywords|$)',first_text,re.S|re.I)
     abstract=' '.join(abstract_match.group(1).split())[:2000] if abstract_match else ''
-    year_match=re.search(r'\b(20[0-2]\d|19\d{2})\b',first_text)
+    year_match=re.search(r'\b(20[0-2]\d|19\d{2})\b(?!\.\d)',first_text)
+    year=('20'+arxiv_id[:2]) if arxiv_id else (year_match.group(0) if year_match else '')
     update_document(doc_id,title=title,authors=authors,abstract=abstract,arxiv_id=arxiv_id,
-                    doi=doi_match.group(0) if doi_match else '',year=year_match.group(0) if year_match else '',
+                    doi=doi_match.group(0) if doi_match else '',year=year,
                     warnings=json.dumps(warnings,ensure_ascii=False),
                     metadata=json.dumps({'headings':headings,'page_sizes':page_sizes,'figures':figures},ensure_ascii=False),
                     status='ready',progress=100)
@@ -210,12 +231,14 @@ def link_references():
         for ref in refs:
             target=None
             text=' '.join(ref['text'].lower().split())
+            normalized_text=re.sub(r'[^a-z0-9]+','',text)
             for paper in papers:
                 if paper['id']==ref['doc_id']:
                     continue
                 title=' '.join(paper['title'].lower().split())
                 arxiv=re.sub(r'v\d+$','',paper['arxiv_id'])
-                if (len(title)>15 and title in text) or (arxiv and arxiv in text) or (paper['doi'] and paper['doi'].lower() in text):
+                normalized_title=re.sub(r'[^a-z0-9]+','',title)
+                if (len(normalized_title)>15 and normalized_title in normalized_text) or (arxiv and arxiv in text) or (paper['doi'] and paper['doi'].lower() in text):
                     target=paper['id']
                     break
             db.execute('UPDATE paper_references SET target_doc_id=? WHERE id=?',(target,ref['id']))
@@ -223,7 +246,7 @@ def link_references():
 
 def index_document(doc_id):
     item=document(doc_id)
-    if not item or item['status']!='ready':
+    if not item or item['status'] not in ('ready','indexing'):
         return
     try:
         update_document(doc_id,status='indexing',progress=0,error='')
