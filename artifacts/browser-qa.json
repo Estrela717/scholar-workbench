@@ -1,5 +1,6 @@
 {
+  "base": "http://127.0.0.1:8765/",
   "errors": [],
   "mobileOverflow": false,
-  "checkedAt": "2026-11-14T07:15:17.761Z"
+  "checkedAt": "2026-11-14T07:52:42.464Z"
 }

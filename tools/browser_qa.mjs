@@ -4,6 +4,7 @@ await mkdir('artifacts/screenshots',{recursive:true});
 const browser=await chromium.launch({channel:'msedge',headless:true});
 const page=await browser.newPage({viewport:{width:1440,height:1000},deviceScaleFactor:1});
 const errors=[];page.on('pageerror',e=>errors.push(e.message));
+page.on('console',e=>{if(e.type()==='error')errors.push(e.text())});
 const base=process.env.SCHOLAR_QA_URL||'http://127.0.0.1:5173/';
 await page.goto(base,{waitUntil:'networkidle'});
 await page.getByRole('heading',{name:'把文献，变成知识。'}).waitFor();

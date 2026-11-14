@@ -1,4 +1,5 @@
 import hashlib
+import mimetypes
 import io
 import json
 import re
@@ -17,6 +18,11 @@ from . import llm,research
 from .jobs import translate_document
 
 init_db()
+# Windows registry associations can label .js as text/plain. Browser modules
+# require a JavaScript MIME type; keep the production build portable.
+mimetypes.init()
+mimetypes.add_type('text/javascript','.js')
+mimetypes.add_type('text/css','.css')
 app=FastAPI(title='知研 · Scholar Workbench',version='0.1.0')
 
 
