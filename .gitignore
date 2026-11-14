@@ -10,3 +10,6 @@ __pycache__/
 runtime/
 artifacts/screenshots/
 *.log
+artifacts/video-test/
+artifacts/video-raw/
+output/

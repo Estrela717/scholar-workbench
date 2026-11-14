@@ -1,0 +1,11 @@
+services:
+  scholar:
+    build: .
+    ports:
+      - "127.0.0.1:8765:8765"
+    environment:
+      OLLAMA_URL: http://host.docker.internal:11434
+      LLM_MODEL: ${LLM_MODEL:-qwen3:4b}
+      EMBEDDING_MODEL: bge-m3:latest
+    volumes:
+      - ./data:/app/data

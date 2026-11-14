@@ -1,0 +1,159 @@
+{
+  "seconds": 40.552371978759766,
+  "text": "好的，根据提供的证据，以下是关于Transformer方法创新的研究文章框架草案，仅使用证据编号进行引用：\n\n**研究文章框架**\n\n**一、 引言**\n*   **背景：** 介绍序列转换任务中传统模型（如RNN、卷积）的局限性 [3]。\n*   **动机：** 提出Transformer模型，旨在通过完全依赖注意力机制来计算输入和输出的表示，从而克服现有模型的缺点 [4]。\n\n**二、 Transformer架构创新**\n*   **核心思想：** 详细描述Transformer完全摒弃循环结构，转而依赖自注意力机制的独特架构 [1]。\n*   **组件：** 解释编码器和解码器均使用堆叠的自注意力层和全连接层 [9]。\n*   **优势：** 强调该架构允许显著更多的并行化训练，并在极短时间内（如十二小时）达到领先的翻译质量 [4]。\n\n**三、 多头注意力机制的创新应用**\n*   **机制：** 解释Transformer如何在三个不同方面利用多头注意力机制 [2]。\n*   **效果：** 提及Transformer是首个完全依赖自注意力进行序列转换的模型 [3]，并展示了其在不同任务（如英语从句结构解析）上的良好泛化能力 [8]。\n\n**四、 实验与评估 (计划进行)**\n*   **拟进行的实验1：** **训练效率测试**。计划在不同硬件配置（如GPU数量）下，测量Transformer模型的训练时间，以验证其高度并行化的特性对训练速度的提升 [4]。\n*   **拟进行的实验2：** **性能对比实验**。计划在标准翻译任务上，将Transformer模型与基于RNN的序列到序列模型进行比较，验证其性能优势 [10]。\n*   **拟进行的实验3：** **消融研究**。计划探究Transformer中不同头注意力机制的具体贡献，验证多头设计的必要性 [2]。\n*   **拟进行的实验4：** **泛化能力验证**。计划在未见过的数据集或任务上测试Transformer模型，特别是考察其在英语从句结构解析等任务上的表现 [8]。\n*   **拟进行的实验5：** **不同规模模型测试**。计划训练并评估不同参数规模的Transformer模型（如base和big），观察模型性能随规模的变化 [5], [6]。\n\n**五、 结论**\n*   **总结：** 再次强调Transformer通过其独特的自注意力架构和多头注意力应用，在序列转换任务中实现了显著的创新和性能提升 [3], [4]。\n\n**注意：** 上述实验部分明确标注为“计划进行”，因为提供的证据仅描述了Transformer已有的架构、概念和初步的性能结果（如训练时间、翻译质量、特定任务准确率），并未包含任何已完成的具体实验数据或结论。",
+  "sources": [
+    {
+      "id": 2301,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 3,
+      "text": "Figure 1: The Transformer - model architecture.",
+      "bbox": [
+        210.01100158691406,
+        404.7454528808594,
+        401.99029541015625,
+        414.70806884765625
+      ],
+      "kind": "caption",
+      "score": 0.03254
+    },
+    {
+      "id": 2331,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 4,
+      "text": "The Transformer uses multi-head attention in three different ways:",
+      "bbox": [
+        107.69100189208984,
+        682.6864624023438,
+        372.6064453125,
+        692.6490478515625
+      ],
+      "kind": "paragraph",
+      "score": 0.03226
+    },
+    {
+      "id": 2293,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 2,
+      "text": "To the best of our knowledge, however, the Transformer is the first transduction model relying\nentirely on self-attention to compute representations of its input and output without using RNNs or\nconvolution. In the following sections, we will describe the Transformer, motivate self-attention and\ndiscuss its advantages over models such as [15, 16] and [9].",
+      "bbox": [
+        107.69100189208984,
+        388.81829833984375,
+        504.1672058105469,
+        431.58306884765625
+      ],
+      "kind": "paragraph",
+      "score": 0.03178
+    },
+    {
+      "id": 2289,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 2,
+      "text": "In this work we propose the Transformer, a model architecture eschewing recurrence and instead\nrelying entirely on an attention mechanism to draw global dependencies between input and output.\nThe Transformer allows for significantly more parallelization and can reach a new state of the art in\ntranslation quality after being trained for as little as twelve hours on eight P100 GPUs.",
+      "bbox": [
+        107.69100189208984,
+        150.74526977539062,
+        505.73870849609375,
+        193.51004028320312
+      ],
+      "kind": "paragraph",
+      "score": 0.03159
+    },
+    {
+      "id": 2397,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 8,
+      "text": "Transformer (big)\n28.4\n41.0\n2.3 · 1019",
+      "bbox": [
+        136.67098999023438,
+        228.7447052001953,
+        447.96112060546875,
+        240.21701049804688
+      ],
+      "kind": "paragraph",
+      "score": 0.03132
+    },
+    {
+      "id": 2396,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 8,
+      "text": "Transformer (base model)\n27.3\n38.1\n3.3 · 1018",
+      "bbox": [
+        136.67100524902344,
+        217.36170959472656,
+        450.7341003417969,
+        228.83505249023438
+      ],
+      "kind": "paragraph",
+      "score": 0.03126
+    },
+    {
+      "id": 2428,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 10,
+      "text": "In this work, we presented the Transformer, the first sequence transduction model based entirely on\nattention, replacing the recurrent layers most commonly used in encoder-decoder architectures with\nmulti-headed self-attention.",
+      "bbox": [
+        108.0,
+        97.54989624023438,
+        503.99725341796875,
+        129.33810424804688
+      ],
+      "kind": "paragraph",
+      "score": 0.03033
+    },
+    {
+      "id": 2420,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 9,
+      "text": "Table 4: The Transformer generalizes well to English constituency parsing (Results are on Section 23\nof WSJ)",
+      "bbox": [
+        107.69100189208984,
+        391.0314025878906,
+        503.99505615234375,
+        411.82708740234375
+      ],
+      "kind": "caption",
+      "score": 0.02932
+    },
+    {
+      "id": 2296,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 2,
+      "text": "The Transformer follows this overall architecture using stacked self-attention and point-wise, fully\nconnected layers for both the encoder and decoder, shown in the left and right halves of Figure 1,\nrespectively.",
+      "bbox": [
+        107.69100189208984,
+        534.1693115234375,
+        505.2474670410156,
+        565.9950561523438
+      ],
+      "kind": "paragraph",
+      "score": 0.0292
+    },
+    {
+      "id": 2425,
+      "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "page": 9,
+      "text": "In contrast to RNN sequence-to-sequence models [33], the Transformer outperforms the BerkeleyParser [27] even when training only on the WSJ training set of 40K sentences.",
+      "bbox": [
+        108.0,
+        701.4827880859375,
+        505.6565246582031,
+        722.4070434570312
+      ],
+      "kind": "paragraph",
+      "score": 0.02831
+    }
+  ],
+  "kind": "outline",
+  "model": "deepseek-r1:8b",
+  "mode": "hybrid"
+}

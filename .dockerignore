@@ -1,0 +1,9 @@
+.venv
+.cache
+node_modules
+data
+.git
+artifacts
+dist
+output
+.env

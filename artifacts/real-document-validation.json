@@ -1,0 +1,17 @@
+{
+  "version_duplicates": [
+    {
+      "id": "60d4185358b54b60a2e4c2a3282319f9",
+      "title": "Attention Is All You Need",
+      "score": 0.812,
+      "reason": "同一 arXiv 论文的版本",
+      "arxiv_id": "1706.03762v1"
+    }
+  ],
+  "book": {
+    "title": "Understanding Deep Learning",
+    "pages": 541,
+    "chunks": 11272,
+    "last_page_chunks": 11
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "seconds": 21.0,
+  "content": "Transformer完全依赖注意力机制来捕捉输入与输出之间的全局依赖关系。",
+  "thinking_length": 2647,
+  "done_reason": "stop",
+  "eval_count": 1235
+}

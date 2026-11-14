@@ -1,0 +1,12 @@
+{
+  "seconds": 22.38,
+  "calls": [
+    {
+      "index": 0,
+      "name": "search_library",
+      "arguments": {
+        "query": "Transformer base and big models GPU count training time"
+      }
+    }
+  ]
+}
