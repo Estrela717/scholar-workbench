@@ -47,7 +47,10 @@ export function FormulaCard({ formula, locate, notify }) {
   const render = () => {
     try {
       return katex.renderToString(
-        latex.replace(/^\$\$?|\$\$?$/g, "").replace(/^\\\[|\\\]$/g, ""),
+        latex
+          .replace(/^\$\$?|\$\$?$/g, "")
+          .replace(/^\\\[|\\\]$/g, "")
+          .replace(/\\(?:begin|end)\{equation\*?\}/g, ""),
         {
           displayMode: true,
           throwOnError: true,

@@ -67,7 +67,7 @@ def require_document(doc_id):
 
 @app.get('/api/health')
 def health():
-    return {'status':'ok','version':'0.1.0','local_only':True}
+    return {'status':'ok','version':'0.2.0','local_only':not bool(os.environ.get('PUBLIC_REVIEW_TOKEN'))}
 
 
 @app.get('/api/status')
@@ -265,6 +265,16 @@ def translation_job(doc_id:str):
     return dict(row) if row else {'status':'none','completed':0,'total':0}
 
 
+@app.get('/api/documents/{doc_id}/translation/export')
+def export_translation(doc_id:str):
+    item=require_document(doc_id)
+    with connect() as db:
+        rows=db.execute('SELECT c.page,c.text,t.text AS translated FROM chunks c LEFT JOIN translations t ON t.chunk_id=c.id WHERE c.doc_id=? ORDER BY c.ordinal',(doc_id,)).fetchall()
+    output=['# '+item['title'],'\n来源：'+item['source_url'],'\n未完成的段落保留原文并标记，公式和代码请对照原 PDF。']
+    for r in rows:output.append(f'\n## 第 {r["page"]} 页\n\n'+(r['translated'] or '**[未翻译 / 原文]**\n\n'+r['text']))
+    return Response('\n'.join(output),media_type='text/markdown;charset=utf-8',headers={'Content-Disposition':'attachment; filename="translation.md"'})
+
+
 @app.post('/api/documents/{doc_id}/translation')
 def start_translation(doc_id:str,background_tasks:BackgroundTasks):
     item=require_document(doc_id)
@@ -360,6 +370,12 @@ def discover(q:str,newest:bool=False):
             other=set(research.tokens(result['title']+' '+result['abstract']))
             result['relevance']=round(len(terms&other)/max(len(other),1),3)
             result['code_mentioned']=bool(re.search(r'github.com|code (?:is|will be)|source code',result['abstract'],re.I))
+            result['code_urls']=re.findall(r'https://github\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+',result['abstract'])
+            with connect() as db:
+                vote=db.execute('SELECT value FROM settings WHERE key=?',('feedback:'+result['id'],)).fetchone()
+            result['feedback']=json.loads(vote['value']) if vote else 0
+            result['recommendation_reason']=f"与本地库关键词重合 {result['relevance']:.1%}"+('；摘要包含代码线索，仓库可复现性仍需核查' if result['code_mentioned'] else '；摘要未发现代码线索')
+        results.sort(key=lambda r:(r['feedback'],r['relevance']+.08*int(r['code_mentioned'])),reverse=True)
         return {'results':results,'source':'arXiv','recommendation':'与本地文献的关键词重合度，仅作辅助排序'}
     except (httpx.HTTPError,ValueError) as error:
         raise HTTPException(502,f'arXiv 暂时无法访问：{type(error).__name__}。请稍后重试。') from error
@@ -367,6 +383,15 @@ def discover(q:str,newest:bool=False):
 
 class ImportRequest(BaseModel):
     arxiv_id:str=Field(max_length=80)
+
+class Feedback(BaseModel):
+    arxiv_id:str=Field(min_length=1,max_length=80)
+    vote:int=Field(ge=-1,le=1)
+
+@app.put('/api/discover/feedback')
+def save_feedback(request:Feedback):
+    with connect() as db:db.execute('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)',('feedback:'+request.arxiv_id,json.dumps(request.vote)))
+    return {'ok':True}
 
 
 @app.post('/api/discover/import')

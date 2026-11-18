@@ -12,10 +12,17 @@ def transcribe(chunk_id):
         cached=db.execute('SELECT * FROM formulas WHERE chunk_id=?',(chunk_id,)).fetchone()
         if cached:return dict(cached)
         chunk=db.execute('SELECT * FROM chunks WHERE id=?',(chunk_id,)).fetchone()
+        neighbors=db.execute('SELECT text,bbox FROM chunks WHERE doc_id=? AND page=?',(chunk['doc_id'],chunk['page'])).fetchall() if chunk else []
     if not chunk:raise ValueError('段落不存在')
     import json
     with fitz.open(FILES/(chunk['doc_id']+'.pdf')) as pdf:
         page=pdf[chunk['page']-1];box=fitz.Rect(json.loads(chunk['bbox']))
+        # Fractions and trailing factors are often separate PDF text blocks.
+        # Include nearby short blocks in the same vertical formula band.
+        band=(box.y0-6,box.y1+12)
+        for row in neighbors:
+            other=fitz.Rect(json.loads(row['bbox']))
+            if len(row['text'])<250 and other.y1>=band[0] and other.y0<=band[1]:box|=other
         box=fitz.Rect(box.x0-8,box.y0-12,box.x1+8,box.y1+12)&page.rect
         png=page.get_pixmap(matrix=fitz.Matrix(3,3),clip=box).tobytes('png')
     with MODEL_LOCK:

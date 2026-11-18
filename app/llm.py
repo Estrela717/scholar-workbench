@@ -47,7 +47,7 @@ def generate(system, prompt, max_tokens=1600, json_mode=False):
                 # Ollama's Qwen3 template needs thinking enabled to separate its
                 # reasoning from the final content field. Disabling it on the
                 # installed model emitted untagged reasoning as the answer.
-                thinking = MODEL.lower().startswith('qwen3')
+                thinking = MODEL.lower().split(':')[0]=='qwen3'
                 payload = {'model': MODEL, 'messages':[{'role':'system','content':system},
                            {'role':'user','content':prompt}], 'stream':False, 'think':thinking,
                            'options':{'temperature':0.15, 'num_ctx':8192,
@@ -112,7 +112,7 @@ def plan_tools(query, allow_external=False):
             calls=response.json()['choices'][0]['message'].get('tool_calls',[])
             return [{'name':c['function']['name'],'arguments':json.loads(c['function']['arguments'])} for c in calls]
         response=httpx.post(OLLAMA+'/api/chat',json={'model':MODEL,'messages':messages,'tools':tools,
-                            'stream':False,'think':MODEL.lower().startswith('qwen3'),
+                            'stream':False,'think':MODEL.lower().split(':')[0]=='qwen3',
                             'options':{'temperature':0,'num_ctx':4096,'num_predict':2200}},timeout=120)
         response.raise_for_status()
         return [c['function'] for c in response.json()['message'].get('tool_calls',[])]

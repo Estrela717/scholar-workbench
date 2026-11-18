@@ -905,6 +905,14 @@ function Reader({
           <ExternalLink size={15} />
           原始 PDF
         </a>
+        <a
+          className="button secondary small"
+          href={
+            active ? "/api/documents/" + active + "/translation/export" : "#"
+          }
+        >
+          导出译文 Markdown
+        </a>
       </div>
       <div className="reader-controls">
         <DocSelector
@@ -1859,7 +1867,27 @@ function Discover({ notify, refresh }) {
               <p className="authors">{p.authors}</p>
               <p className="abstract">{p.abstract}</p>
               <div className="paper-result-bottom">
-                <span>本地关联度 {Math.round(p.relevance * 100)}%</span>
+                <span>{p.recommendation_reason || "来自定期追踪结果"}</span>
+                {[1, -1].map((v) => (
+                  <button
+                    className="text-button"
+                    key={v}
+                    onClick={async () => {
+                      try {
+                        await api("/discover/feedback", {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ arxiv_id: p.id, vote: v }),
+                        });
+                        notify("偏好已保存，将用于后续排序");
+                      } catch (e) {
+                        notify(e.message, true);
+                      }
+                    }}
+                  >
+                    {v === 1 ? "感兴趣" : "不感兴趣"}
+                  </button>
+                ))}
                 <button
                   className="button secondary small"
                   disabled={!!importing}

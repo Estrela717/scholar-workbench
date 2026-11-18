@@ -201,7 +201,8 @@ def _parse_document(doc_id):
     update_document(doc_id,title=title,authors=authors,abstract=abstract,arxiv_id=arxiv_id,
                     doi=doi_match.group(0) if doi_match else '',year=year,
                     warnings=json.dumps(warnings,ensure_ascii=False),
-                    metadata=json.dumps({'headings':headings,'page_sizes':page_sizes,'figures':figures},ensure_ascii=False),
+                    metadata=json.dumps({'headings':headings,'page_sizes':page_sizes,'figures':figures,
+                        'affiliations':list(dict.fromkeys(line.strip() for line in first_text.splitlines() if re.search(r'University|Institute|Google|Research|Facebook|大学|研究院|学院',line,re.I) and len(line)<160))[:20]},ensure_ascii=False),
                     status='ready',progress=100)
     extract_references(doc_id)
     link_references()
