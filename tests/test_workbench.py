@@ -192,3 +192,57 @@ def test_qwen_reasoning_is_separate_and_truncation_is_rejected(monkeypatch):
     monkeypatch.setattr(Response,'json',lambda self:{'message':{'content':'Partial'},'done_reason':'length'})
     with pytest.raises(llm.ModelUnavailable,match='长度上限'):
         llm.generate('system','prompt')
+
+
+def test_periodic_tracking_deduplicates_and_respects_pause(monkeypatch):
+    from app import tracking
+    calls=[]
+    def search(topic,**kwargs):
+        calls.append(topic)
+        return [{'id':'1706.03762v1','title':'Attention','abstract':'test'}]
+    monkeypatch.setattr(tracking,'arxiv_search',search)
+    client.put('/api/tracking',json={'topic':'attention','interval_hours':1})
+    assert tracking.refresh_due()['new']==1
+    assert tracking.refresh_due()['topics']==0
+    assert tracking.refresh_due(True)['new']==0
+    client.put('/api/tracking',json={'topic':'attention','enabled':False})
+    assert tracking.refresh_due(True)['topics']==0
+    assert len(calls)==2
+
+
+def test_tracking_network_failure_does_not_report_success(monkeypatch):
+    from app import tracking
+    def fail(*a,**k):raise RuntimeError('offline')
+    monkeypatch.setattr(tracking,'arxiv_search',fail)
+    client.put('/api/tracking',json={'topic':'fail topic'})
+    assert tracking.refresh_due(True)['topics']==0
+    row=next(t for t in tracking.snapshot()['topics'] if t['topic']=='fail topic')
+    assert row['error']=='offline' and not row['last_run']
+
+
+def test_formula_review_is_saved_against_real_chunk(uploaded):
+    chunk=client.get(f'/api/documents/{uploaded}/pages/1').json()['chunks'][0]
+    latex=r'E=mc^2'
+    assert client.put('/api/formulas/'+str(chunk['id']),json={'latex':latex}).status_code==200
+    result=client.get('/api/formulas/'+str(chunk['id'])).json()
+    assert result['latex']==latex and result['reviewed']==1
+    assert client.put('/api/formulas/99999999',json={'latex':latex}).status_code==404
+
+
+def test_public_review_access_and_library_protection(monkeypatch):
+    monkeypatch.setenv('PUBLIC_REVIEW_TOKEN','test-review-token')
+    assert client.get('/api/documents').status_code==401
+    assert client.get('/review').status_code==200
+    headers={'Authorization':'Bearer test-review-token'}
+    assert client.get('/api/documents',headers=headers).status_code==200
+    assert client.delete('/api/documents/anything',headers=headers).status_code==403
+    assert client.post('/api/ask',headers={**headers,'origin':'https://evil.example'},json={'query':'test'}).status_code==403
+
+
+def test_note_edit_persists_without_mutating_sources():
+    with connect() as db:
+        db.execute("INSERT INTO notes(id,title,text,sources,created_at) VALUES('edit-test','title','old','[]','test')")
+    assert client.put('/api/notes/edit-test',json={'text':'revised'}).status_code==200
+    with connect() as db:
+        r=db.execute("SELECT * FROM notes WHERE id='edit-test'").fetchone()
+        assert r['text']=='revised' and r['sources']=='[]'

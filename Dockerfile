@@ -3,6 +3,7 @@ WORKDIR /src
 COPY package*.json ./
 RUN npm ci --no-audit --no-fund
 COPY src ./src
+COPY public ./public
 COPY index.html vite.config.js ./
 RUN npm run build
 

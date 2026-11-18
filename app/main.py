@@ -4,6 +4,9 @@ import io
 import json
 import re
 import uuid
+import threading
+import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 import pymupdf as fitz
 import httpx
@@ -16,6 +19,8 @@ from .db import connect,init_db,document,decode_document,now,record
 from .parser import parse_document,index_document,duplicates,link_references
 from . import llm,research
 from .jobs import translate_document
+from . import tracking,formulas
+from .review_access import protect
 
 init_db()
 # Windows registry associations can label .js as text/plain. Browser modules
@@ -23,7 +28,16 @@ init_db()
 mimetypes.init()
 mimetypes.add_type('text/javascript','.js')
 mimetypes.add_type('text/css','.css')
-app=FastAPI(title='知研 · Scholar Workbench',version='0.1.0')
+@asynccontextmanager
+async def lifespan(app):
+    stop=threading.Event()
+    worker=threading.Thread(target=tracking.loop,args=(stop,),daemon=True)
+    worker.start()
+    yield
+    stop.set()
+
+app=FastAPI(title='知研 · Scholar Workbench',version='0.2.0',lifespan=lifespan)
+app.middleware('http')(protect)
 
 
 @app.middleware('http')
@@ -32,7 +46,9 @@ async def local_origin_guard(request:Request,call_next):
     # Local-first application: do not allow another website to issue state-changing requests.
     if request.method not in ('GET','HEAD','OPTIONS') and origin:
         from urllib.parse import urlparse
-        if urlparse(origin).hostname not in ('localhost','127.0.0.1'):
+        allowed={'localhost','127.0.0.1'}
+        if os.environ.get('PUBLIC_REVIEW_TOKEN'):allowed.add(request.url.hostname)
+        if urlparse(origin).hostname not in allowed:
             return JSONResponse({'detail':'不允许此来源访问本地服务'},status_code=403)
     return await call_next(request)
 
@@ -423,6 +439,60 @@ def interests(request:InterestSettings):
         db.execute('INSERT OR REPLACE INTO settings(key,value) VALUES(?,?)',('interests',json.dumps(request.interests)))
     return {'ok':True}
 
+
+@app.get('/api/tracking')
+def tracked():return tracking.snapshot()
+
+class TrackRequest(BaseModel):
+    topic:str=Field(min_length=2,max_length=150)
+    enabled:bool=True
+    interval_hours:int=Field(default=24,ge=1,le=168)
+
+@app.put('/api/tracking')
+def set_tracking(request:TrackRequest):
+    with connect() as db:
+        db.execute('INSERT INTO tracking_topics(topic,enabled,interval_hours) VALUES(?,?,?) ON CONFLICT(topic) DO UPDATE SET enabled=excluded.enabled,interval_hours=excluded.interval_hours',
+            (request.topic.strip(),int(request.enabled),request.interval_hours))
+    return {'ok':True}
+
+@app.post('/api/tracking/refresh')
+def refresh_tracking(background_tasks:BackgroundTasks):
+    background_tasks.add_task(tracking.refresh_due,True)
+    return {'queued':True}
+
+@app.post('/api/tracking/read')
+def read_tracking():
+    with connect() as db:db.execute('UPDATE discoveries SET is_new=0')
+    return {'ok':True}
+
+@app.post('/api/formulas/{chunk_id}')
+def transcribe_formula(chunk_id:int):
+    try:return formulas.transcribe(chunk_id)
+    except ValueError as error:raise HTTPException(400,str(error)) from error
+
+class FormulaEdit(BaseModel):
+    latex:str=Field(min_length=1,max_length=6000)
+
+@app.put('/api/formulas/{chunk_id}')
+def edit_formula(chunk_id:int,request:FormulaEdit):
+    with connect() as db:
+        if not db.execute('SELECT id FROM chunks WHERE id=?',(chunk_id,)).fetchone():raise HTTPException(404,'段落不存在')
+        db.execute('INSERT OR REPLACE INTO formulas(chunk_id,latex,model,reviewed,updated_at) VALUES(?,?,?,?,?)',(chunk_id,request.latex,'user-reviewed',1,now()))
+    return {'ok':True}
+
+@app.get('/api/formulas/{chunk_id}')
+def get_formula(chunk_id:int):
+    with connect() as db:row=db.execute('SELECT * FROM formulas WHERE chunk_id=?',(chunk_id,)).fetchone()
+    return dict(row) if row else None
+
+class NoteEdit(BaseModel):
+    text:str=Field(min_length=1,max_length=50000)
+
+@app.put('/api/notes/{note_id}')
+def edit_note(note_id:str,request:NoteEdit):
+    with connect() as db:
+        if not db.execute('UPDATE notes SET text=? WHERE id=?',(request.text,note_id)).rowcount:raise HTTPException(404,'草稿不存在')
+    return {'ok':True}
 
 if (ROOT/'dist').is_dir():
     app.mount('/',StaticFiles(directory=ROOT/'dist',html=True),name='frontend')

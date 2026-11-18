@@ -2710,3 +2710,62 @@ small {
     transition: none !important;
   }
 }
+
+.formula-editor,
+.tracking-panel {
+  padding: 20px;
+  margin: 16px 0;
+}
+.formula-editor pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.formula-editor textarea {
+  width: 100%;
+  min-height: 100px;
+  margin: 16px 0;
+}
+.formula-render {
+  overflow: auto;
+}
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.tracking-topic {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #dae5e0;
+}
+.tracking-panel small {
+  display: block;
+  margin-top: 10px;
+  color: #677d79;
+}
+.advanced-plot {
+  width: 100%;
+  min-height: 480px;
+}
+.chart-controls label {
+  display: block;
+  margin: 16px 0;
+}
+.chart-controls select,
+.chart-controls input {
+  width: 100%;
+  padding: 10px;
+}
+.diagram-preview {
+  overflow: auto;
+}
+.diagram-preview svg {
+  max-width: 100%;
+  height: auto;
+}
+.writing-textarea {
+  width: 100%;
+}

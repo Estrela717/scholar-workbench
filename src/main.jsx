@@ -46,6 +46,12 @@ import {
   Menu,
 } from "lucide-react";
 import "./style.css";
+import {
+  FormulaCard,
+  TrackingPanel,
+  Diagram,
+  AdvancedChart,
+} from "./research-tools.jsx";
 
 async function api(path, options = {}) {
   const response = await fetch("/api" + path, options);
@@ -1277,19 +1283,15 @@ function Reader({
                     )}
                     <h3>公式候选（{structures.formula_candidates.length}）</h3>
                     {structures.formula_candidates.map((f) => (
-                      <button
-                        className="formula-candidate"
+                      <FormulaCard
                         key={f.id}
-                        onClick={() => {
+                        formula={f}
+                        notify={notify}
+                        locate={() => {
                           setHighlight(f.id);
                           setView("translation");
                         }}
-                      >
-                        <pre>{f.text}</pre>
-                        <span>
-                          定位原文 <ArrowUpRight size={12} />
-                        </span>
-                      </button>
+                      />
                     ))}
                     <h3>嵌入图像（{structures.figures.length}）</h3>
                     <p className="muted">
@@ -1792,6 +1794,14 @@ function Discover({ notify, refresh }) {
           </button>
         </form>
       </div>
+      <TrackingPanel
+        query={q}
+        notify={notify}
+        onResults={(r) => {
+          setResults(r);
+          setSearched(true);
+        }}
+      />
       <div className="discovery-toolbar">
         <label>
           <input
@@ -2137,7 +2147,7 @@ function WritingSpace({ ready, notify, openSource }) {
         ))}
       </div>
       {mode === "chart" ? (
-        <ChartStudio notify={notify} />
+        <AdvancedChart notify={notify} />
       ) : (
         <div className="writing-layout">
           <div className="writing-input card">
@@ -2193,6 +2203,7 @@ function WritingSpace({ ready, notify, openSource }) {
                     key={n.id}
                     onClick={() =>
                       setOutput({
+                        id: n.id,
                         text: n.text,
                         sources: JSON.parse(n.sources),
                         kind: "review",
@@ -2232,6 +2243,37 @@ function WritingSpace({ ready, notify, openSource }) {
               <Busy text="正在基于文献证据组织草稿，请稍候…" />
             ) : output ? (
               <>
+                {mode === "diagram" && <Diagram text={output.text} />}
+                <details>
+                  <summary>编辑草稿 / 结构图代码</summary>
+                  <textarea
+                    aria-label="编辑草稿"
+                    className="writing-textarea"
+                    value={output.text}
+                    onChange={(e) =>
+                      setOutput({ ...output, text: e.target.value })
+                    }
+                  />
+                  {output.id && (
+                    <button
+                      className="button secondary"
+                      onClick={async () => {
+                        try {
+                          await api("/notes/" + output.id, {
+                            method: "PUT",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ text: output.text }),
+                          });
+                          notify("草稿已保存");
+                        } catch (e) {
+                          notify(e.message, true);
+                        }
+                      }}
+                    >
+                      保存草稿
+                    </button>
+                  )}
+                </details>
                 <AnswerText
                   text={output.text}
                   sources={output.sources || []}
@@ -2253,259 +2295,6 @@ function WritingSpace({ ready, notify, openSource }) {
         </div>
       )}
     </>
-  );
-}
-
-function ChartStudio({ notify }) {
-  const [data, setData] = useState(null),
-    [x, setX] = useState(""),
-    [y, setY] = useState(""),
-    [type, setType] = useState("bar"),
-    [title, setTitle] = useState("实验结果对比");
-  const input = useRef(),
-    svgRef = useRef();
-  async function upload(file) {
-    try {
-      const body = new FormData();
-      body.append("file", file);
-      const r = await api("/csv", { method: "POST", body });
-      setData(r);
-      setX(r.columns[0]);
-      setY(r.numeric.find((c) => c !== r.columns[0]) || r.numeric[0] || "");
-    } catch (e) {
-      notify(e.message, true);
-    }
-  }
-  const rows = (data?.rows || []).slice(0, 50),
-    values = rows.map((r) => Number(r[y])),
-    min = Math.min(0, ...values),
-    max = Math.max(0, ...values),
-    range = max - min || 1;
-  const px = (i) => 75 + ((i + 0.5) * 620) / Math.max(rows.length, 1),
-    py = (v) => 310 - ((v - min) / range) * 240,
-    baseline = py(0);
-  const plotCode =
-    data && y
-      ? `import pandas as pd\nimport matplotlib.pyplot as plt\n\ndf = pd.read_csv('your-data.csv')\nfig, ax = plt.subplots(figsize=(9, 5))\nax.${type === "line" ? "plot" : "bar"}(df[${JSON.stringify(x)}], df[${JSON.stringify(y)}], color='#247b6b')\nax.set_title(${JSON.stringify(title)})\nax.set_xlabel(${JSON.stringify(x)})\nax.set_ylabel(${JSON.stringify(y)})\nfig.tight_layout()\nfig.savefig('figure.svg', bbox_inches='tight')\nplt.show()\n`
-      : "";
-  return (
-    <div className="chart-layout">
-      <div className="card chart-controls">
-        <h3>从数据到图表</h3>
-        <input
-          ref={input}
-          type="file"
-          hidden
-          accept=".csv,text/csv"
-          onChange={(e) => e.target.files[0] && upload(e.target.files[0])}
-        />
-        <button
-          className="button secondary full-width"
-          onClick={() => input.current.click()}
-        >
-          <Upload size={16} />
-          上传 CSV
-        </button>
-        <small className="helper-text">
-          首行为列名，至少一列数值，最大 2MB / 2000 行。预览显示前 50 行。
-        </small>
-        {data && (
-          <>
-            <label className="field-label">图表标题</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} />
-            <label className="field-label">类别 / X 轴</label>
-            <select value={x} onChange={(e) => setX(e.target.value)}>
-              {data.columns.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-            <label className="field-label">数值 / Y 轴</label>
-            <select value={y} onChange={(e) => setY(e.target.value)}>
-              {data.numeric.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-            <label className="field-label">图表类型</label>
-            <div className="segmented">
-              <button
-                className={type === "bar" ? "selected" : ""}
-                onClick={() => setType("bar")}
-              >
-                柱状图
-              </button>
-              <button
-                className={type === "line" ? "selected" : ""}
-                onClick={() => setType("line")}
-              >
-                折线图
-              </button>
-            </div>
-            <p className="helper-text">
-              已读取 {data.count} 行、{data.columns.length} 列。
-            </p>
-          </>
-        )}
-        <button
-          className="text-button"
-          onClick={() =>
-            saveFile(
-              "sample.csv",
-              "Model,Accuracy,Latency\nBaseline,72.4,180\nRAG,81.2,220\nHybrid,85.6,240\n",
-            )
-          }
-        >
-          下载 CSV 格式示例
-        </button>
-      </div>
-      <div className="card chart-output">
-        {!data || !y ? (
-          <Empty
-            icon={BarChart3}
-            title="让数据，清楚地表达"
-            description={
-              data
-                ? "未发现可绘制的完整数值列，请检查数据。"
-                : "上传 CSV，选择变量，即可导出矢量图与 Python 代码。"
-            }
-          />
-        ) : (
-          <>
-            <div className="panel-top">
-              <span>图表预览</span>
-              <button
-                className="text-button"
-                onClick={() =>
-                  saveFile(
-                    "figure.svg",
-                    svgRef.current.outerHTML,
-                    "image/svg+xml",
-                  )
-                }
-              >
-                <Download size={14} />
-                导出 SVG
-              </button>
-            </div>
-            <svg
-              ref={svgRef}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 760 420"
-              className="chart-svg"
-            >
-              <rect width="760" height="420" fill="white" />
-              <text
-                x="380"
-                y="35"
-                textAnchor="middle"
-                fontSize="20"
-                fill="#233e45"
-              >
-                {title}
-              </text>
-              {Array.from({ length: 5 }, (_, i) => {
-                const v = min + (range * i) / 4;
-                return (
-                  <g key={i}>
-                    <line
-                      x1="75"
-                      y1={py(v)}
-                      x2="705"
-                      y2={py(v)}
-                      stroke="#e6eded"
-                    />
-                    <text
-                      x="65"
-                      y={py(v) + 4}
-                      textAnchor="end"
-                      fontSize="11"
-                      fill="#74848a"
-                    >
-                      {v.toFixed(1)}
-                    </text>
-                  </g>
-                );
-              })}
-              {type === "line" ? (
-                <>
-                  <polyline
-                    fill="none"
-                    stroke="#247b6b"
-                    strokeWidth="3"
-                    points={values.map((v, i) => px(i) + "," + py(v)).join(" ")}
-                  />
-                  {values.map((v, i) => (
-                    <circle
-                      key={i}
-                      cx={px(i)}
-                      cy={py(v)}
-                      r="4"
-                      fill="#247b6b"
-                    />
-                  ))}
-                </>
-              ) : (
-                values.map((v, i) => (
-                  <rect
-                    key={i}
-                    x={px(i) - Math.min(26, 250 / rows.length)}
-                    y={Math.min(py(v), baseline)}
-                    width={Math.min(52, 500 / rows.length)}
-                    height={Math.max(1, Math.abs(py(v) - baseline))}
-                    rx="3"
-                    fill={["#247b6b", "#79a89b", "#456d88"][i % 3]}
-                  />
-                ))
-              )}
-              {rows.map((r, i) => (
-                <text
-                  key={i}
-                  x={px(i)}
-                  y="335"
-                  textAnchor="middle"
-                  fontSize={rows.length > 15 ? 8 : 11}
-                  fill="#465c65"
-                >
-                  {short(r[x], 12)}
-                </text>
-              ))}
-              <text
-                x="380"
-                y="382"
-                textAnchor="middle"
-                fontSize="13"
-                fill="#465c65"
-              >
-                {x}
-              </text>
-              <text
-                x="18"
-                y="195"
-                textAnchor="middle"
-                transform="rotate(-90,18,195)"
-                fontSize="13"
-                fill="#465c65"
-              >
-                {y}
-              </text>
-            </svg>
-            <p className="figure-caption">
-              图 1. {title}。横轴为 {x}，纵轴为 {y}。图中展示上传数据的前{" "}
-              {rows.length} 条记录；数值来自 CSV，未进行统计显著性推断。
-            </p>
-            <details className="code-preview">
-              <summary>可复现的 Python 绘图代码</summary>
-              <pre>{plotCode}</pre>
-              <button
-                className="button secondary small"
-                onClick={() => saveFile("plot.py", plotCode)}
-              >
-                下载 plot.py
-              </button>
-            </details>
-          </>
-        )}
-      </div>
-    </div>
   );
 }
 

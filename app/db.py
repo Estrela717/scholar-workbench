@@ -59,6 +59,18 @@ def init_db():
             sources TEXT DEFAULT '[]', created_at TEXT NOT NULL
         );
         CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+        CREATE TABLE IF NOT EXISTS tracking_topics (
+            topic TEXT PRIMARY KEY, enabled INTEGER DEFAULT 1, interval_hours INTEGER DEFAULT 24,
+            next_run REAL DEFAULT 0, last_run TEXT DEFAULT '', error TEXT DEFAULT ''
+        );
+        CREATE TABLE IF NOT EXISTS discoveries (
+            topic TEXT NOT NULL, arxiv_id TEXT NOT NULL, payload TEXT NOT NULL,
+            found_at TEXT NOT NULL, is_new INTEGER DEFAULT 1, PRIMARY KEY(topic,arxiv_id)
+        );
+        CREATE TABLE IF NOT EXISTS formulas (
+            chunk_id INTEGER PRIMARY KEY REFERENCES chunks(id) ON DELETE CASCADE,
+            latex TEXT NOT NULL, model TEXT NOT NULL, reviewed INTEGER DEFAULT 0, updated_at TEXT NOT NULL
+        );
         CREATE TABLE IF NOT EXISTS activity (
             id INTEGER PRIMARY KEY, kind TEXT NOT NULL, message TEXT NOT NULL, created_at TEXT NOT NULL
         );
