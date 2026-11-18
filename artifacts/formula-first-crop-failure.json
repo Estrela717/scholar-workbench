@@ -1,0 +1,8 @@
+{
+  "chunk_id": 2308,
+  "latex": "$$\\operatorname { A t t e n t i o n } ( Q , K , V ) = \\operatorname { s o f t m a x } \\left( \\frac { Q K ^ { T } } { \\sqrt { d _ { k } } } \\right)$$",
+  "model": "qwen3-vl:4b-instruct",
+  "reviewed": 0,
+  "updated_at": "2026-11-18T02:59:22.969451+00:00",
+  "seconds": 30.75
+}

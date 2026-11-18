@@ -1,0 +1,15 @@
+{
+  "url": "https://accountability-cambridge-household-adjustment.trycloudflare.com",
+  "unauthenticated_status": 401,
+  "login_status": 200,
+  "health": {
+    "status": "ok",
+    "version": "0.2.0",
+    "local_only": false
+  },
+  "documents_status": 200,
+  "document_count": 5,
+  "formula_status": 200,
+  "formula_contains_final_V": true,
+  "validated": true
+}

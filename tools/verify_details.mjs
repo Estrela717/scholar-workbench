@@ -1,0 +1,44 @@
+import {chromium} from 'playwright';
+import {readFile,writeFile} from 'node:fs/promises';
+const browser=await chromium.launch({channel:'msedge',headless:true});
+const page=await browser.newPage({viewport:{width:1440,height:1000}});
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+const base=process.env.SCHOLAR_QA_URL||'http://127.0.0.1:8767/';
+const report={};
+try {
+  await page.goto(base,{waitUntil:'networkidle'});
+  await page.locator('aside.sidebar').getByRole('button',{name:'写作工坊',exact:true}).click();
+  await page.getByRole('button',{name:'结构图代码',exact:true}).click();
+  await page.locator('.saved-notes button').filter({hasText:'Transformer encoder decoder'}).first().click();
+  await page.locator('.diagram-preview svg').waitFor();
+  const download=page.waitForEvent('download');
+  await page.getByRole('button',{name:'导出结构图 SVG',exact:true}).click();
+  await (await download).saveAs('artifacts/screenshots/method-diagram.svg');
+  report.mermaid_rendered=true;
+  await page.screenshot({path:'artifacts/screenshots/mermaid-live.png',fullPage:true});
+  await page.getByText('编辑草稿 / 结构图代码',{exact:true}).click();
+  const field=page.getByLabel('编辑草稿',{exact:true}), original=await field.inputValue();
+  await field.fill(original+'\n');
+  const saved=page.waitForResponse(r=>r.url().includes('/api/notes/')&&r.request().method()==='PUT');
+  await page.getByRole('button',{name:'保存草稿',exact:true}).click();
+  report.draft_save_status=(await saved).status();
+  await page.locator('aside.sidebar').getByRole('button',{name:'沉浸阅读',exact:true}).click();
+  await page.locator('.reader-controls select').selectOption('60d4185358b54b60a2e4c2a3282319f9');
+  await page.waitForTimeout(1400);
+  await page.getByRole('spinbutton',{name:'页码'}).fill('3');
+  await page.waitForTimeout(1400);
+  await page.getByRole('button',{name:'图表与公式',exact:true}).click();
+  await page.locator('.formula-render .katex').waitFor();
+  await page.locator('.formula-render').first().scrollIntoViewIfNeeded();
+  await page.screenshot({path:'artifacts/screenshots/formula-final.png',fullPage:true});
+  report.formula_rendered=true;
+  const translation=await page.request.get(base+'api/documents/60d4185358b54b60a2e4c2a3282319f9/translation/export');
+  report.translation_export_status=translation.status();
+  report.translation_export_chars=(await translation.text()).length;
+} finally {
+  report.errors=errors;
+  await writeFile('artifacts/detail-browser-validation.json',JSON.stringify(report,null,2));
+  await browser.close();
+}
+console.log(JSON.stringify(report));
+if(errors.length)process.exitCode=1;

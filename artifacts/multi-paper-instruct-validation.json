@@ -1,0 +1,143 @@
+{
+  "seconds": 21.95,
+  "result": {
+    "answer": "1. BERT 使用双向自注意力机制，而 OpenAI GPT 使用单向（左到右）自注意力机制 [3]。  \n2. BERT 的编码器结构基于 Vaswani 等人提出的 Transformer 编码器，与原始实现几乎一致 [4]。  \n3. BERT 的编码器在所有层中均对左右上下文联合建模，而 GPT 仅能关注左侧上下文 [2]。  \n4. BERT 与 GPT 的设计初衷是尽可能接近以便对比，但二者在训练目标上存在差异 [5]。  \n5. BERT 的训练目标包含两个预训练任务，而 GPT 仅训练为语言模型（LM） [5]。  \n6. BERT 的架构与 GPT 相比，核心差异在于双向性与双任务预训练，而非模型大小 [5]。",
+    "sources": [
+      {
+        "id": 2301,
+        "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+        "title": "Attention Is All You Need",
+        "page": 3,
+        "text": "Figure 1: The Transformer - model architecture.",
+        "bbox": [
+          210.01100158691406,
+          404.7454528808594,
+          401.99029541015625,
+          414.70806884765625
+        ],
+        "kind": "caption",
+        "score": 0.02869
+      },
+      {
+        "id": 2140,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 13,
+        "text": "Figure 3: Differences in pre-training model architectures. BERT uses a bidirectional Transformer. OpenAI GPT\nuses a left-to-right Transformer. ELMo uses the concatenation of independently trained left-to-right and right-toleft LSTMs to generate features for downstream tasks. Among the three, only BERT representations are jointly\nconditioned on both left and right context in all layers. In addition to the architecture differences, BERT and\nOpenAI GPT are fine-tuning approaches, while ELMo is a feature-based approach.",
+        "bbox": [
+          72.0,
+          183.46546936035156,
+          525.54736328125,
+          241.24813842773438
+        ],
+        "kind": "reference",
+        "score": 0.03252
+      },
+      {
+        "id": 1868,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 3,
+        "text": "BERTBASE was chosen to have the same model\nsize as OpenAI GPT for comparison purposes.\nCritically, however, the BERT Transformer uses\nbidirectional self-attention, while the GPT Transformer uses constrained self-attention where every\ntoken can only attend to context to its left.4",
+        "bbox": [
+          307.2760009765625,
+          622.539794921875,
+          525.5484619140625,
+          701.1948852539062
+        ],
+        "kind": "paragraph",
+        "score": 0.03178
+      },
+      {
+        "id": 1865,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 3,
+        "text": "Model Architecture\nBERT’s model architecture is a multi-layer bidirectional Transformer encoder based on the original implementation described in Vaswani et al. (2017) and released in\nthe tensor2tensor library.1 Because the use\nof Transformers has become common and our implementation is almost identical to the original,\nwe will omit an exhaustive background description of the model architecture and refer readers to\nVaswani et al. (2017) as well as excellent guides\nsuch as “The Annotated Transformer.”2",
+        "bbox": [
+          307.2760009765625,
+          377.2501525878906,
+          525.5486450195312,
+          523.7509155273438
+        ],
+        "kind": "paragraph",
+        "score": 0.02818
+      },
+      {
+        "id": 2163,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 14,
+        "text": "The most comparable existing pre-training\nmethod to BERT is OpenAI GPT, which trains a\nleft-to-right Transformer LM on a large text corpus. In fact, many of the design decisions in BERT\nwere intentionally made to make it as close to\nGPT as possible so that the two methods could be\nminimally compared. The core argument of this\nwork is that the bi-directionality and the two pretraining tasks presented in Section 3.1 account for\nthe majority of the empirical improvements, but\nwe do note that there are several other differences\nbetween how BERT and GPT were trained:",
+        "bbox": [
+          71.99998474121094,
+          348.186767578125,
+          290.269287109375,
+          508.1369323730469
+        ],
+        "kind": "reference",
+        "score": 0.02803
+      },
+      {
+        "id": 1805,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 1,
+        "text": "BERT: Pre-training of Deep Bidirectional Transformers for",
+        "bbox": [
+          116.51899719238281,
+          70.6820068359375,
+          481.02740478515625,
+          85.02820587158203
+        ],
+        "kind": "heading",
+        "score": 0.02679
+      },
+      {
+        "id": 2425,
+        "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+        "title": "Attention Is All You Need",
+        "page": 9,
+        "text": "In contrast to RNN sequence-to-sequence models [33], the Transformer outperforms the BerkeleyParser [27] even when training only on the WSJ training set of 40K sentences.",
+        "bbox": [
+          108.0,
+          701.4827880859375,
+          505.6565246582031,
+          722.4070434570312
+        ],
+        "kind": "paragraph",
+        "score": 0.0264
+      },
+      {
+        "id": 2100,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 12,
+        "text": "A\nAdditional Details for BERT",
+        "bbox": [
+          307.27593994140625,
+          220.9058837890625,
+          473.5488586425781,
+          232.861083984375
+        ],
+        "kind": "reference",
+        "score": 0.02632
+      }
+    ],
+    "trace": [
+      {
+        "tool": "search_library",
+        "status": "done",
+        "detail": "检索方式 hybrid，找到 8 条原文证据"
+      },
+      {
+        "tool": "validate_citations",
+        "status": "done",
+        "detail": "引用编号有效，可打开对应原文；仍需核对论断是否被原文支持"
+      }
+    ],
+    "mode": "hybrid",
+    "model": "qwen3-vl:4b-instruct",
+    "validated": true
+  }
+}

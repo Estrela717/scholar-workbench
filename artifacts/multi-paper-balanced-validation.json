@@ -1,0 +1,143 @@
+{
+  "seconds": 15.34,
+  "result": {
+    "answer": "1. 原始 Transformer 的编码器结构基于自注意力机制，完全摒弃了递归和卷积，仅依赖注意力机制抽取输入与输出间的全局依赖关系 [3]。\n\n2. 原始 Transformer 的编码器结构由堆叠的自注意力层和点wise全连接层组成，其架构在图1左侧展示 [7]。\n\n3. BERT 的编码器结构是多层双向 Transformer 编码器，基于 Vaswani 等人（2017）的原始实现，与原始 Transformer 架构几乎一致 [4]。\n\n4. BERT 的训练目标不使用传统左到右或右到左语言模型，而是采用两种无监督任务进行预训练 [6]。",
+    "sources": [
+      {
+        "id": 2425,
+        "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+        "title": "Attention Is All You Need",
+        "page": 9,
+        "text": "In contrast to RNN sequence-to-sequence models [33], the Transformer outperforms the BerkeleyParser [27] even when training only on the WSJ training set of 40K sentences.",
+        "bbox": [
+          108.0,
+          701.4827880859375,
+          505.6565246582031,
+          722.4070434570312
+        ],
+        "kind": "paragraph",
+        "score": 0.02486
+      },
+      {
+        "id": 1868,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 3,
+        "text": "BERTBASE was chosen to have the same model\nsize as OpenAI GPT for comparison purposes.\nCritically, however, the BERT Transformer uses\nbidirectional self-attention, while the GPT Transformer uses constrained self-attention where every\ntoken can only attend to context to its left.4",
+        "bbox": [
+          307.2760009765625,
+          622.539794921875,
+          525.5484619140625,
+          701.1948852539062
+        ],
+        "kind": "paragraph",
+        "score": 0.0328
+      },
+      {
+        "id": 2289,
+        "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+        "title": "Attention Is All You Need",
+        "page": 2,
+        "text": "In this work we propose the Transformer, a model architecture eschewing recurrence and instead\nrelying entirely on an attention mechanism to draw global dependencies between input and output.\nThe Transformer allows for significantly more parallelization and can reach a new state of the art in\ntranslation quality after being trained for as little as twelve hours on eight P100 GPUs.",
+        "bbox": [
+          107.69100189208984,
+          150.74526977539062,
+          505.73870849609375,
+          193.51004028320312
+        ],
+        "kind": "paragraph",
+        "score": 0.0237
+      },
+      {
+        "id": 1865,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 3,
+        "text": "Model Architecture\nBERT’s model architecture is a multi-layer bidirectional Transformer encoder based on the original implementation described in Vaswani et al. (2017) and released in\nthe tensor2tensor library.1 Because the use\nof Transformers has become common and our implementation is almost identical to the original,\nwe will omit an exhaustive background description of the model architecture and refer readers to\nVaswani et al. (2017) as well as excellent guides\nsuch as “The Annotated Transformer.”2",
+        "bbox": [
+          307.2760009765625,
+          377.2501525878906,
+          525.5486450195312,
+          523.7509155273438
+        ],
+        "kind": "paragraph",
+        "score": 0.02686
+      },
+      {
+        "id": 2282,
+        "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+        "title": "Attention Is All You Need",
+        "page": 1,
+        "text": "The dominant sequence transduction models are based on complex recurrent or\nconvolutional neural networks in an encoder-decoder configuration. The best\nperforming models also connect the encoder and decoder through an attention\nmechanism. We propose a new simple network architecture, the Transformer,\nbased solely on attention mechanisms, dispensing with recurrence and convolutions\nentirely. Experiments on two machine translation tasks show these models to\nbe superior in quality while being more parallelizable and requiring significantly\nless time to train. Our model achieves 28.4 BLEU on the WMT 2014 Englishto-German translation task, improving over the existing best results, including\nensembles by over 2 BLEU. On the WMT 2014 English-to-French translation task,\nour model establishes a new single-model state-of-the-art BLEU score of 41.0 after\ntraining for 3.5 days on eight GPUs, a small fraction of the training costs of the\nbest models from the literature. We show that the Transformer generalizes well to\nother tasks by applying it successfully to English constituency parsing both with\nlarge and limited training data.",
+        "bbox": [
+          143.86599731445312,
+          361.1842956542969,
+          469.78717041015625,
+          523.9490356445312
+        ],
+        "kind": "paragraph",
+        "score": 0.02116
+      },
+      {
+        "id": 1875,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 4,
+        "text": "Unlike Peters et al. (2018a) and Radford et al.\n(2018), we do not use traditional left-to-right or\nright-to-left language models to pre-train BERT.\nInstead, we pre-train BERT using two unsupervised tasks, described in this section. This step\nis presented in the left part of Figure 1.",
+        "bbox": [
+          71.99998474121094,
+          502.2438659667969,
+          290.2693176269531,
+          580.8989868164062
+        ],
+        "kind": "paragraph",
+        "score": 0.02393
+      },
+      {
+        "id": 2296,
+        "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+        "title": "Attention Is All You Need",
+        "page": 2,
+        "text": "The Transformer follows this overall architecture using stacked self-attention and point-wise, fully\nconnected layers for both the encoder and decoder, shown in the left and right halves of Figure 1,\nrespectively.",
+        "bbox": [
+          107.69100189208984,
+          534.1693115234375,
+          505.2474670410156,
+          565.9950561523438
+        ],
+        "kind": "paragraph",
+        "score": 0.01992
+      },
+      {
+        "id": 1877,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 4,
+        "text": "former is often referred to as a “Transformer encoder” while\nthe left-context-only version is referred to as a “Transformer\ndecoder” since it can be used for text generation.",
+        "bbox": [
+          72.0,
+          736.240966796875,
+          290.26904296875,
+          765.1323852539062
+        ],
+        "kind": "paragraph",
+        "score": 0.02369
+      }
+    ],
+    "trace": [
+      {
+        "tool": "search_library",
+        "status": "done",
+        "detail": "检索方式 hybrid，找到 8 条原文证据"
+      },
+      {
+        "tool": "validate_citations",
+        "status": "done",
+        "detail": "引用编号有效，可打开对应原文；仍需核对论断是否被原文支持"
+      }
+    ],
+    "mode": "hybrid",
+    "model": "qwen3-vl:4b-instruct",
+    "validated": true
+  }
+}

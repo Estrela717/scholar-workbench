@@ -1,5 +1,25 @@
 # 本地验收记录
 
+## 2026-11-18 增补
+
+默认文本与视觉模型更新为 `qwen3-vl:4b-instruct`，避免 Qwen3 思考模型在多篇比较中耗尽输出预算。保留早期失败记录；不把引用编号通过当作全部论断正确。
+
+| 检查 | 实际结果 | 证据 |
+|---|---|---|
+| 后端自动化 | 23 项，增加周期去重、失败退避、公式校对、评审保护和草稿编辑 | tests/test_workbench.py |
+| 界面与图表 | 七页无运行错误、移动布局无溢出；柱、线、散点、雷达、三维逐一检查 | artifacts/browser-qa.json、advanced-browser-validation.json |
+| 公式 | 首轮漏 V；合并相邻块后真实视觉转写完整公式，KaTeX 渲染 | formula-first-crop-failure.json、formula-live-validation.json |
+| 跨文比较 | 修复候选集中于单篇和比较对象漂移；15.34 秒完成一次修复后回答 | multi-paper-balanced-validation.json；只是单次观察 |
+| 周期追踪 | 真实主题返回 12 条结果，持久化到本地收件箱 | tracking-live-validation.json |
+| 公网访问 | HTTPS 登录后文献接口 200，独立样例库 5 篇 | public-access-validation.json；临时隧道 |
+| PDF | 最新两份各 12 页，已渲染检查 | output/submission-2026-11-18/qa |
+| 结构图与导出 | 真实模型 Mermaid 可渲染，SVG 导出、草稿保存与译文导出成功 | mermaid-live-validation.json、detail-browser-validation.json |
+| 数值解释修复 | 录制发现对共同训练条件过度保守；逐项核对后 GPU / 时长正确 | overcautious-answer-failure.json、numeric-answer-validation.json |
+
+新增 Mermaid 预览、可编辑草稿、译文 Markdown、推荐反馈、Python / TikZ 导出。没有整书翻译、全球引文覆盖、持续公网托管或 Docker 运行成功的声明。
+
+## 2026-11-14 历史验收
+
 日期：2026-11-14。Windows、Python 3.13.5、Node 24.11、32GB 内存、RTX 5060 Laptop 8GB。以下是实际开发验收，不是官方评测。
 
 | 检查 | 结果 | 证据与限制 |

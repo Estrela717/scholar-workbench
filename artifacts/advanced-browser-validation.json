@@ -1,0 +1,10 @@
+{
+  "errors": [],
+  "types": [
+    "bar",
+    "line",
+    "scatter",
+    "radar",
+    "scatter3d"
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "chunk_id": 2308,
+  "latex": "\\begin{equation}\n\\mathrm{Attention}(Q,K,V) = \\mathrm{softmax}\\left(\\frac{QK^T}{\\sqrt{d_k}}\\right)V\n\\end{equation}",
+  "model": "qwen3-vl:4b-instruct",
+  "reviewed": 0,
+  "updated_at": "2026-11-18T03:03:14.265029+00:00",
+  "seconds": 7.94
+}

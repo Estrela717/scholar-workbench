@@ -1,0 +1,138 @@
+{
+  "seconds": 178.09862661361694,
+  "result": {
+    "answer": "模型输出达到长度上限，未将不完整回答作为结果。请缩短问题或选择更少文献后重试。\n以下是检索到的原文片段，并非模型生成回答。",
+    "sources": [
+      {
+        "id": 2301,
+        "doc_id": "60d4185358b54b60a2e4c2a3282319f9",
+        "title": "Attention Is All You Need",
+        "page": 3,
+        "text": "Figure 1: The Transformer - model architecture.",
+        "bbox": [
+          210.01100158691406,
+          404.7454528808594,
+          401.99029541015625,
+          414.70806884765625
+        ],
+        "kind": "caption",
+        "score": 0.02886
+      },
+      {
+        "id": 2140,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 13,
+        "text": "Figure 3: Differences in pre-training model architectures. BERT uses a bidirectional Transformer. OpenAI GPT\nuses a left-to-right Transformer. ELMo uses the concatenation of independently trained left-to-right and right-toleft LSTMs to generate features for downstream tasks. Among the three, only BERT representations are jointly\nconditioned on both left and right context in all layers. In addition to the architecture differences, BERT and\nOpenAI GPT are fine-tuning approaches, while ELMo is a feature-based approach.",
+        "bbox": [
+          72.0,
+          183.46546936035156,
+          525.54736328125,
+          241.24813842773438
+        ],
+        "kind": "reference",
+        "score": 0.03226
+      },
+      {
+        "id": 1868,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 3,
+        "text": "BERTBASE was chosen to have the same model\nsize as OpenAI GPT for comparison purposes.\nCritically, however, the BERT Transformer uses\nbidirectional self-attention, while the GPT Transformer uses constrained self-attention where every\ntoken can only attend to context to its left.4",
+        "bbox": [
+          307.2760009765625,
+          622.539794921875,
+          525.5484619140625,
+          701.1948852539062
+        ],
+        "kind": "paragraph",
+        "score": 0.03178
+      },
+      {
+        "id": 1865,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 3,
+        "text": "Model Architecture\nBERT’s model architecture is a multi-layer bidirectional Transformer encoder based on the original implementation described in Vaswani et al. (2017) and released in\nthe tensor2tensor library.1 Because the use\nof Transformers has become common and our implementation is almost identical to the original,\nwe will omit an exhaustive background description of the model architecture and refer readers to\nVaswani et al. (2017) as well as excellent guides\nsuch as “The Annotated Transformer.”2",
+        "bbox": [
+          307.2760009765625,
+          377.2501525878906,
+          525.5486450195312,
+          523.7509155273438
+        ],
+        "kind": "paragraph",
+        "score": 0.02844
+      },
+      {
+        "id": 2163,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 14,
+        "text": "The most comparable existing pre-training\nmethod to BERT is OpenAI GPT, which trains a\nleft-to-right Transformer LM on a large text corpus. In fact, many of the design decisions in BERT\nwere intentionally made to make it as close to\nGPT as possible so that the two methods could be\nminimally compared. The core argument of this\nwork is that the bi-directionality and the two pretraining tasks presented in Section 3.1 account for\nthe majority of the empirical improvements, but\nwe do note that there are several other differences\nbetween how BERT and GPT were trained:",
+        "bbox": [
+          71.99998474121094,
+          348.186767578125,
+          290.269287109375,
+          508.1369323730469
+        ],
+        "kind": "reference",
+        "score": 0.02803
+      },
+      {
+        "id": 1805,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 1,
+        "text": "BERT: Pre-training of Deep Bidirectional Transformers for",
+        "bbox": [
+          116.51899719238281,
+          70.6820068359375,
+          481.02740478515625,
+          85.02820587158203
+        ],
+        "kind": "heading",
+        "score": 0.02765
+      },
+      {
+        "id": 1863,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 3,
+        "text": "A distinctive feature of BERT is its unified architecture across different tasks. There is mini-",
+        "bbox": [
+          72.0,
+          741.143798828125,
+          290.269287109375,
+          765.601806640625
+        ],
+        "kind": "paragraph",
+        "score": 0.02548
+      },
+      {
+        "id": 1977,
+        "doc_id": "1797e6341fa44b17850e410df2e97df8",
+        "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+        "page": 9,
+        "text": "Results are presented in Table 7. BERTLARGE\nperforms competitively with state-of-the-art methods. The best performing method concatenates the\ntoken representations from the top four hidden layers of the pre-trained Transformer, which is only\n0.3 F1 behind fine-tuning the entire model. This\ndemonstrates that BERT is effective for both finetuning and feature-based approaches.",
+        "bbox": [
+          307.2760009765625,
+          456.7287902832031,
+          525.5452270507812,
+          562.48193359375
+        ],
+        "kind": "paragraph",
+        "score": 0.0254
+      }
+    ],
+    "trace": [
+      {
+        "tool": "search_library",
+        "status": "done",
+        "detail": "检索方式 hybrid，找到 8 条原文证据"
+      }
+    ],
+    "mode": "extractive",
+    "model": null,
+    "validated": false
+  }
+}
