@@ -17,4 +17,5 @@ artifacts/screenshots/
 *.log
 artifacts/video-test/
 artifacts/video-raw/
+artifacts/voice-natural/
 output/

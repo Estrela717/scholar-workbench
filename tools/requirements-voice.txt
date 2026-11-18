@@ -1,0 +1,2 @@
+# Optional production tool; not a runtime dependency of the research app.
+edge-tts==7.3.1

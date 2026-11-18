@@ -1,0 +1,190 @@
+[
+  {
+    "track": "innovation",
+    "duration_seconds": 345.15999999999997,
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "synthesized": true,
+    "video_stream": "copied without re-encoding",
+    "decode_errors": [],
+    "chapters": [
+      {
+        "chapter": 1,
+        "starts_at": 1.5,
+        "speech_seconds": 18.432,
+        "available_seconds": 28.703,
+        "overlap": false
+      },
+      {
+        "chapter": 2,
+        "starts_at": 30.203,
+        "speech_seconds": 20.4,
+        "available_seconds": 28.7,
+        "overlap": false
+      },
+      {
+        "chapter": 3,
+        "starts_at": 58.903,
+        "speech_seconds": 18.336,
+        "available_seconds": 28.698,
+        "overlap": false
+      },
+      {
+        "chapter": 4,
+        "starts_at": 87.6,
+        "speech_seconds": 20.928,
+        "available_seconds": 28.69,
+        "overlap": false
+      },
+      {
+        "chapter": 5,
+        "starts_at": 116.29,
+        "speech_seconds": 19.584,
+        "available_seconds": 28.702,
+        "overlap": false
+      },
+      {
+        "chapter": 6,
+        "starts_at": 144.992,
+        "speech_seconds": 19.992,
+        "available_seconds": 28.694,
+        "overlap": false
+      },
+      {
+        "chapter": 7,
+        "starts_at": 173.686,
+        "speech_seconds": 18.816,
+        "available_seconds": 28.692,
+        "overlap": false
+      },
+      {
+        "chapter": 8,
+        "starts_at": 202.378,
+        "speech_seconds": 19.824,
+        "available_seconds": 28.693,
+        "overlap": false
+      },
+      {
+        "chapter": 9,
+        "starts_at": 231.071,
+        "speech_seconds": 18.96,
+        "available_seconds": 28.693,
+        "overlap": false
+      },
+      {
+        "chapter": 10,
+        "starts_at": 259.763,
+        "speech_seconds": 19.656,
+        "available_seconds": 28.701,
+        "overlap": false
+      },
+      {
+        "chapter": 11,
+        "starts_at": 288.464,
+        "speech_seconds": 20.064,
+        "available_seconds": 28.695,
+        "overlap": false
+      },
+      {
+        "chapter": 12,
+        "starts_at": 317.159,
+        "speech_seconds": 19.536,
+        "available_seconds": 28.001,
+        "overlap": false
+      }
+    ]
+  },
+  {
+    "track": "llm",
+    "duration_seconds": 364.4,
+    "voice": "zh-CN-XiaoxiaoNeural",
+    "synthesized": true,
+    "video_stream": "copied without re-encoding",
+    "decode_errors": [],
+    "chapters": [
+      {
+        "chapter": 1,
+        "starts_at": 1.5,
+        "speech_seconds": 18.384,
+        "available_seconds": 28.52,
+        "overlap": false
+      },
+      {
+        "chapter": 2,
+        "starts_at": 30.02,
+        "speech_seconds": 19.272,
+        "available_seconds": 28.521,
+        "overlap": false
+      },
+      {
+        "chapter": 3,
+        "starts_at": 58.541,
+        "speech_seconds": 19.608,
+        "available_seconds": 28.514,
+        "overlap": false
+      },
+      {
+        "chapter": 4,
+        "starts_at": 87.056,
+        "speech_seconds": 19.464,
+        "available_seconds": 28.518,
+        "overlap": false
+      },
+      {
+        "chapter": 5,
+        "starts_at": 115.574,
+        "speech_seconds": 19.296,
+        "available_seconds": 28.514,
+        "overlap": false
+      },
+      {
+        "chapter": 6,
+        "starts_at": 144.088,
+        "speech_seconds": 31.68,
+        "available_seconds": 49.712,
+        "overlap": false
+      },
+      {
+        "chapter": 7,
+        "starts_at": 193.8,
+        "speech_seconds": 18.936,
+        "available_seconds": 28.515,
+        "overlap": false
+      },
+      {
+        "chapter": 8,
+        "starts_at": 222.315,
+        "speech_seconds": 19.464,
+        "available_seconds": 28.52,
+        "overlap": false
+      },
+      {
+        "chapter": 9,
+        "starts_at": 250.835,
+        "speech_seconds": 20.256,
+        "available_seconds": 28.517,
+        "overlap": false
+      },
+      {
+        "chapter": 10,
+        "starts_at": 279.353,
+        "speech_seconds": 20.208,
+        "available_seconds": 28.518,
+        "overlap": false
+      },
+      {
+        "chapter": 11,
+        "starts_at": 307.871,
+        "speech_seconds": 19.416,
+        "available_seconds": 28.52,
+        "overlap": false
+      },
+      {
+        "chapter": 12,
+        "starts_at": 336.391,
+        "speech_seconds": 20.856,
+        "available_seconds": 28.009,
+        "overlap": false
+      }
+    ]
+  }
+]

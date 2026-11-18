@@ -12,9 +12,10 @@
 | 跨文比较 | 修复候选集中于单篇和比较对象漂移；15.34 秒完成一次修复后回答 | multi-paper-balanced-validation.json；只是单次观察 |
 | 周期追踪 | 真实主题返回 12 条结果，持久化到本地收件箱 | tracking-live-validation.json |
 | 公网访问 | HTTPS 登录后文献接口 200，独立样例库 5 篇 | public-access-validation.json；临时隧道 |
-| PDF | 最新两份各 12 页，已渲染检查 | output/submission-2026-11-18/qa |
+| PDF | 按赛道重写为15页与18页，33页逐页渲染检查 | output/submission-2026-11-18/qa/revised |
 | 结构图与导出 | 真实模型 Mermaid 可渲染，SVG 导出、草稿保存与译文导出成功 | mermaid-live-validation.json、detail-browser-validation.json |
 | 数值解释修复 | 录制发现对共同训练条件过度保守；逐项核对后 GPU / 时长正确 | overcautious-answer-failure.json、numeric-answer-validation.json |
+| 自然配音 | Microsoft Xiaoxiao神经语音，24段；无章节重叠或截断，画面流直接复制 | natural-voice-validation.json；仍为明示的合成配音 |
 
 新增 Mermaid 预览、可编辑草稿、译文 Markdown、推荐反馈、Python / TikZ 导出。没有整书翻译、全球引文覆盖、持续公网托管或 Docker 运行成功的声明。
 
